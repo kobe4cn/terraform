@@ -150,7 +150,7 @@ resource "aws_instance" "k3s_worker" {
 }
 
 resource "local_sensitive_file" "kubeconfig" {
-  depends_on = [aws_instance.k3s_master, null_resource.get_k3s_token, aws_instance.k3s_worker]
+
   #   apiVersion: v1
   #   clusters:
   #   - cluster:
@@ -169,10 +169,9 @@ resource "local_sensitive_file" "kubeconfig" {
   #   - name: admin
   #     user:
   #       token: ${file("${path.module}/node-token")}
-  content  = <<EOT
-    ${file("${path.module}/config.yaml")}
-  EOT
-  filename = "${path.module}/k3s.yaml"
+  content    = file("${path.module}/config.yaml")
+  filename   = "${path.module}/k3s.yaml"
+  depends_on = [aws_instance.k3s_master, null_resource.get_k3s_token, aws_instance.k3s_worker]
 }
 
 # Security Group

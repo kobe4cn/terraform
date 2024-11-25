@@ -5,6 +5,7 @@ resource "helm_release" "argo_cd" {
   repository = "https://argoproj.github.io/argo-helm"
   chart      = "argo-cd"
   namespace  = "argocd"
+  timeout = 600
 
 #   set {
 #     name  = "global.tlsVerify"
