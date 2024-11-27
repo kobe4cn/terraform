@@ -14,13 +14,13 @@ module "vpc" {
   
   # 为公共子网启用自动分配公共 IP
   map_public_ip_on_launch = true
-  public_subnet_tags = {
-    "kubernetes.io/role/elb" = "1"
-    "Type"                   = "public"
-  }
+#   public_subnet_tags = {
+#     "kubernetes.io/role/elb" = "1"
+#     "Type"                   = "public"
+#   }
   
-  private_subnet_tags = {
-    "kubernetes.io/role/internal-elb" = "1"
-    "Type"                           = "private"
-  }
+#   private_subnet_tags = {
+#     "kubernetes.io/role/internal-elb" = "1"
+#     "Type"                           = "private"
+#   }
 }

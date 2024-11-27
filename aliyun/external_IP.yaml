@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: external-ip-service  # 服务名称
+  namespace: argocd  # 指定命名空间
+spec:
+  selector:
+    app: argocd-server  # 根据标签选择 Pod
+  ports:
+    - protocol: TCP
+      port: 8080  # 服务的内部端口
+      targetPort: 80  # Pod 内部的端口
+  externalIPs:
+    -  8.217.106.194

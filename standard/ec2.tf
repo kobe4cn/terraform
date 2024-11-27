@@ -56,75 +56,9 @@ resource "aws_instance" "k3s_master" {
   tags = {
     Name = "k3s-master"
   }
-
-  #   user_data = <<-EOT
-  #     #!/bin/bash
-  #     curl -sfL https://get.k3s.io | sh -
-  #     sleep 30
-  #     cat /var/lib/rancher/k3s/server/node-token > /tmp/node-token
-  #     cat /etc/rancher/k3s/k3s.yaml > /tmp/k3s.yaml
-  #     cat /var/lib/rancher/k3s/server/tls/server-ca.crt > /tmp/ca.crt
-  #     sudo chown ec2-user:ec2-user /tmp/k3s.yaml
-  #     sudo chown ec2-user:ec2-user /tmp/node-token
-  #     sudo chown ec2-user:ec2-user /tmp/ca.crt
-
-  #   EOT
-
   vpc_security_group_ids = [aws_security_group.k3s_sg.id]
-  #   provisioner "local-exec" {
-  #     command = "scp -i ${var.aws_key_pair} -o StrictHostKeyChecking=no ec2-user@${self.public_ip}:/tmp/node-token ${path.module}/node-token; scp  -i ${var.aws_key_pair} -o StrictHostKeyChecking=no ec2-user@${aws_instance.k3s_master.public_ip}:/tmp/k3s.yaml ${path.module}/k3s.yaml;"
-
-  #   }
-
 }
-resource "null_resource" "get_k3s" {
-  # 指定实例的 SSH 访问配置
-  connection {
-    type        = "ssh"
-    user        = "ec2-user"                # 根据实际用户修改
-    private_key = file(var.aws_key_private) # SSH 私钥路径
-    host        = aws_instance.k3s_master.public_ip
-  }
-  provisioner "remote-exec" {
-    inline = [
 
-      "curl -sfL https://get.k3s.io | sh -s - --tls-san ${aws_instance.k3s_master.public_ip}",
-      "sleep 30",
-      "sudo cat /var/lib/rancher/k3s/server/node-token > /tmp/node-token",
-      "sudo cat /etc/rancher/k3s/k3s.yaml > /tmp/k3s.yaml",
-      "sudo cat /var/lib/rancher/k3s/server/tls/server-ca.crt > /tmp/ca.crt",
-      "sudo chown ec2-user:ec2-user /tmp/k3s.yaml",
-      "sudo chown ec2-user:ec2-user /tmp/node-token",
-      "sudo chown ec2-user:ec2-user /tmp/ca.crt",
-    ]
-  }
-  depends_on = [aws_instance.k3s_master]
-}
-resource "null_resource" "get_k3s_token" {
-  provisioner "local-exec" {
-    # command = "sleep 60; scp -i ${var.aws_key_pair} -o StrictHostKeyChecking=no ec2-user@${aws_instance.k3s_master.public_ip}:/tmp/node-token ./node-token; scp  -i ${var.aws_key_pair} -o StrictHostKeyChecking=no ec2-user@${aws_instance.k3s_master.public_ip}:/tmp/k3s.yaml ./k3s.yaml; sed -i 's/127.0.0.1/${aws_instance.k3s_master.public_ip}/g' ./node-token;"
-
-    command = <<EOT
-  sleep 120;
-  echo "Starting SCP for node-token...";
-  scp -i ${var.aws_key_pair} -o StrictHostKeyChecking=no ec2-user@${aws_instance.k3s_master.public_ip}:/tmp/node-token ./node-token || exit 1;
-  echo "Starting SCP for k3s.yaml...";
-  scp -i ${var.aws_key_pair} -o StrictHostKeyChecking=no ec2-user@${aws_instance.k3s_master.public_ip}:/tmp/k3s.yaml ./config.yaml || exit 1;
-  echo "Starting SCP for ca.crt...";
-  scp -i ${var.aws_key_pair} -o StrictHostKeyChecking=no ec2-user@${aws_instance.k3s_master.public_ip}:/tmp/ca.crt ./ca.crt || exit 1;
-  echo "Updating config.yaml...";
-  if [ -f ./config.yaml ]; then
-    sed -i '' "s/127.0.0.1/${aws_instance.k3s_master.public_ip}/g" ./config.yaml || exit 1;
-  else
-    echo "Error: ./config.yaml not found!";
-    exit 1;
-  fi
-  EOT
-
-  }
-
-  depends_on = [aws_instance.k3s_master, null_resource.get_k3s]
-}
 # EC2 Instances for K3s Worker Nodes
 resource "aws_instance" "k3s_worker" {
   count         = var.worker_count
@@ -136,44 +70,21 @@ resource "aws_instance" "k3s_worker" {
   tags = {
     Name = "k3s-worker-${count.index}"
   }
-
   user_data = <<-EOT
     #!/bin/bash
     sleep 30
     scp -i ${var.aws_key_pair} -o StrictHostKeyChecking=no ec2-user@${aws_instance.k3s_master.public_ip}:/tmp/node-token /tmp/node-token
     curl -sfL https://get.k3s.io | K3S_URL=https://${aws_instance.k3s_master.public_ip}:6443 K3S_TOKEN=`cat /tmp/node-token` sh -
   EOT
-
   vpc_security_group_ids = [aws_security_group.k3s_sg.id]
-
   depends_on = [aws_instance.k3s_master, null_resource.get_k3s_token]
 }
 
 resource "local_sensitive_file" "kubeconfig" {
-
-  #   apiVersion: v1
-  #   clusters:
-  #   - cluster:
-  #       server: https://${aws_instance.k3s_master.public_ip}:6443
-  #       certificate-authority-data: ${base64encode(file("${path.module}/ca.crt"))}
-  #     name: k3s-cluster
-  #   contexts:
-  #   - context:
-  #       cluster: k3s-cluster
-  #       user: admin
-  #     name: k3s-context
-  #   current-context: k3s-context
-  #   kind: Config
-  #   preferences: {}
-  #   users:
-  #   - name: admin
-  #     user:
-  #       token: ${file("${path.module}/node-token")}
   content    = file("${path.module}/config.yaml")
   filename   = "${path.module}/k3s.yaml"
   depends_on = [aws_instance.k3s_master, null_resource.get_k3s_token, aws_instance.k3s_worker]
 }
-
 # Security Group
 resource "aws_security_group" "k3s_sg" {
   name_prefix = "k3s-sg-"
@@ -190,21 +101,18 @@ resource "aws_security_group" "k3s_sg" {
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
-
   ingress {
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
-
   ingress {
     from_port   = 443
     to_port     = 443
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
-
   egress {
     from_port   = 0
     to_port     = 0

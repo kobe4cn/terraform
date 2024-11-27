@@ -1,8 +1,8 @@
 terraform {
   required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "~> 5.0"
+    alicloud = {
+      source = "aliyun/alicloud"
+      version = "1.235.0"
     }
     helm = {
       source  = "hashicorp/helm"
@@ -10,11 +10,10 @@ terraform {
     }
   }
 }
-
 provider "helm" {
   kubernetes {
-    config_path = local_sensitive_file.kubeconfig.filename
+    config_path = "${path.module}/config.yaml"
     # insecure-skip-tls-verify = true
-    insecure    = true
+    # insecure    = true
   }
 }

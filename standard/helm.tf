@@ -6,18 +6,5 @@ resource "helm_release" "argo_cd" {
   chart      = "argo-cd"
   namespace  = "argocd"
   timeout = 600
-
-#   set {
-#     name  = "global.tlsVerify"
-#     value = "false"
-#   }
-
-#   set {
-#     name  = "global.skipTls"
-#     value = "true"
-#   }
-  #   values = [
-  #     file("${path.module}/k3s.yaml")
-  #   ]
   create_namespace = true
 }
