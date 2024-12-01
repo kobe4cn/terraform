@@ -1,0 +1,49 @@
+global:
+  postgresql:
+    username: postgres
+    # password: postgres
+    existingSecret: psql-secret
+  # storageClass: alicloud-disk-topology-alltype
+
+#不需要暴露在公网
+service:
+  type: ClusterIP
+  ports:
+    postgresql: 5432
+
+#暴露在公网
+# service:
+#   type: LoadBalancer
+#   ports:
+#     postgresql: 5432
+
+postgresql:
+  replicaCount: 3
+  username: postgres
+  # password: postgres
+  existingSecret: psql-secret
+
+pgpool:
+  # adminPassword: postgres
+  existingSecret: psql-secret
+
+
+# comment out below to use default pv
+
+# persistence:
+#   existingClaim: postgres-volume-claim
+#   storageClass: manual
+
+# volumePermissions:
+#   enabled: true
+
+# comment out below to use custom pv
+
+persistence:
+  selector: 
+    matchLabels:
+      app: postgres-app
+  storageClass: alicloud-disk-topology-alltype
+
+volumePermissions:
+  enabled: true

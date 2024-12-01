@@ -1,0 +1,19 @@
+global:
+  postgresql:
+    username: "postgres"   # 设置 PostgreSQL 用户名
+    password: "postgres"   # 设置 PostgreSQL 密码
+    database: "terraform"
+    repmgrUsername: "repmgr"  # 设置 repmgr 用户名
+    repmgrPassword: "repmgr"  # 设置 repmgr 密码
+    repmgrDatabase: "repmgr"  # 设置 repmgr 数据库名称
+  pgpool:
+    adminUsername: "pgpool"  # 设置 pgpool 用户名
+    adminPassword: "pgpool"  # 设置 pgpool 密码
+    # defaultStorageClass: "standard"   # 设置 PostgreSQL 数据库名称
+
+persistence:
+  enabled: true
+    # storageClass: "standard"  # 使用你创建的 StorageClass
+  size: 40Gi
+    # accessMode: ReadWriteOnce
+  existingClaim: "master-pvc" 

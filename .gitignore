@@ -6,5 +6,6 @@
 terraform.tfstate
 terraform.tfstate.backup
 terraform.tfvars
-.yaml
-secret.yaml
+# .yaml
+# secret.yaml
+aliyun/config.yaml

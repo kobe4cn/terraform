@@ -1,0 +1,22 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: job-demo-job
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    "helm.sh/hook": "pre-install"
+    "helm.sh/hook-weight": "-5"
+    "helm.sh/hook-delete-policy": "hook-failed"
+spec:
+  template:
+    spec:
+      containers:
+        - name: demo-job
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag  }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+            - /bin/sh
+            - -c
+            - |
+              echo "Hello, Pre-install!"
+      restartPolicy: Never

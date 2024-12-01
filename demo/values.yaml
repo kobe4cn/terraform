@@ -1,0 +1,8 @@
+image:
+  repository: busybox
+  tag: latest
+  pullPolicy: IfNotPresent
+
+app:
+  name: demo-app
+replicaCount: 1

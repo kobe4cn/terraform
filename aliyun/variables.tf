@@ -7,7 +7,6 @@ variable "aliyun_access_key" {
 variable "aliyun_secret_key" {
     description = "Aliyun Secret Key"
     type        = string
-    
 }   
 
 
